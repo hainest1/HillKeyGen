@@ -15,18 +15,14 @@ import Jama.Matrix;
 
 public class HillKeyGen extends JPanel implements ActionListener {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
-	//private JFrame frame;
 	private int v, fileNumber = 0;
 	private long attempts, detStart, detFinish, det, detUnModded;
-    private double elapsedTime = 0;
+	private double elapsedTime = 0;
 	
 	protected static JTextField textField;
-    protected JTextArea textArea;
-    private final static String newline = "\n";
+	protected JTextArea textArea;
+	private final static String newline = "\n";
 	
 
 	/**
@@ -35,15 +31,8 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	public static void main(String[] args) throws IOException {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				try {
-					//HillKeyGen window = new HillKeyGen();
-					//window.frame.setVisible(true);
-					
-					createAndShowGUI();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				try { createAndShowGUI(); } 
+				catch (Exception e) { e.printStackTrace(); }
 			}
 		});
 	}
@@ -52,43 +41,42 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	 * Create the application.
 	 */
 	public HillKeyGen() {
-        super(new GridBagLayout());
+		super(new GridBagLayout());
         
-        JTextPane title = new JTextPane();
-        title.setText("Hill Key Generator V1\nBy Tom Haines and Ryan Stapp\nPlease enter a dimension below to generate a legal Hill matrix. Files are automatically saved.");
-        title.setEditable(false);
+		JTextPane title = new JTextPane();
+		title.setText("Hill Key Generator V1\nBy Tom Haines and Ryan Stapp\nPlease enter a dimension below to generate a legal Hill matrix. Files are automatically saved.");
+		title.setEditable(false);
         
-        textField = new JTextField();
-        textField.addActionListener(this);	//probably use this for button too?
- 
-        textArea = new JTextArea(20, 50);
-        textArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(textArea);
- 
-        //Add Components to this panel.
-        GridBagConstraints c = new GridBagConstraints();
+		textField = new JTextField();
+		textField.addActionListener(this);	//probably use this for button too?
 
-        c.gridwidth = GridBagConstraints.REMAINDER;
+		textArea = new JTextArea(20, 50);
+		textArea.setEditable(false);
+		JScrollPane scrollPane = new JScrollPane(textArea);
+
+		//Add Components to this panel.
+		GridBagConstraints c = new GridBagConstraints();
+
+		c.gridwidth = GridBagConstraints.REMAINDER;
+
+		c.fill = GridBagConstraints.HORIZONTAL;
+		add(title, c);
+		add(scrollPane, c);
  
-        c.fill = GridBagConstraints.HORIZONTAL;
-        add(title, c);
-        add(scrollPane, c);
- 
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-        add(textField, c);
+		c.fill = GridBagConstraints.BOTH;
+		c.weightx = 1.0;
+		c.weighty = 1.0;
+		add(textField, c);
 	}
 
     public void actionPerformed(ActionEvent evt) {    	
-    	try 
-    	{
+    	try {
     		v = getIntegerInput();
     		if (v > 0)
     		{
-	            textArea.setText(v + " x " + v + " Hill matrix:\n\n");
+	    		textArea.setText(v + " x " + v + " Hill matrix:\n\n");
 	            
-	            Matrix matrix = generateMatrix(v);
+	    		Matrix matrix = generateMatrix(v);
 	    		outputMatrix(v, matrix);
 	    		
 	    		textArea.append("Determinant: " + detUnModded + newline);
@@ -100,24 +88,19 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	    			textArea.append("Trouble writing to file: " + ioe.getMessage());
 	    		}
     		}
-	    	else
-    		{
-    			textArea.setText("Please enter a positive number.");
-    		}
-        } catch (Exception e) {
-            textArea.setText("Please enter an integer.");
-        }
+    		else textArea.setText("Please enter a positive number.");
+    	} catch (Exception e) {	textArea.setText("Please enter an integer.");	}
         
-        // //textArea.removeAll();
-        textField.selectAll();
+    	textField.selectAll();
         
- 
-        //Make sure the new text is visible, even if there
-        //was a selection in the text area.
-        textArea.setCaretPosition(textArea.getDocument().getLength());
+    	//Make sure the new text is visible, even if there
+    	//was a selection in the text area.
+    	textArea.setCaretPosition(textArea.getDocument().getLength());
     }
 	
-	
+	/**
+	 * Output matrix of order v to file.
+	 */
     private void outputToFile(Matrix matrix, int v) throws IOException {
     	String fileName;
 		File outFile;
@@ -156,14 +139,17 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		pw.println("Determinant Mod 26: " + det);
 		pw.println("Number of iterations: " + attempts);
 		pw.println("Determinant elapsed time: " + elapsedTime + "s");
-		pw.println("Generated " + dateFormat.format(date));
+		pw.print("Generated " + dateFormat.format(date));
 		pw.close();	//close the printwriter
 		
 		textArea.append("Saved as: " + outFile.getAbsolutePath());	//output save location
 	}
-
+	
+    /**
+	 * Output matrix to textArea.
+	 */
 	private void outputMatrix(int v, Matrix matrix) {
-    	for (int i = 0; i < v; i++)
+		for (int i = 0; i < v; i++)
 		{
 			for (int j = 0; j < v; j++)
 			{
@@ -175,11 +161,15 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	}
 
 	private int getIntegerInput() {
-        return Integer.valueOf(textField.getText());	
+		return Integer.valueOf(textField.getText());	
 	}
 
+	/**
+	 * Generate a matrix of order n that has a determinant%26
+	 * that is relatively prime to 26.
+	 */
 	private Matrix generateMatrix(int n) {
-		Matrix matrix;//new matrix JAMA object
+		Matrix matrix;	//new matrix JAMA object
 		attempts = 0; 
 		
 		do
@@ -190,7 +180,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 			matrix = new Matrix(n, n);	//initialize matrix JAMA object with dimension n
 			Random g = new Random();	//random number generator object
 			
-			for (int i = 0; i < n; i++)//loop through array elements
+			for (int i = 0; i < n; i++)	//loop through matrix elements
 			{
 				for (int j = 0; j < n; j++)
 				{
@@ -213,10 +203,11 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		return matrix;
 	}
 
-	private long getDeterminant(Matrix matrix) {
-		return (long) matrix.det();
-	}
+	private long getDeterminant(Matrix matrix) {	return (long) matrix.det();	}
 
+	/**
+	 * Set up and show the window/GUI.
+	 */
 	private static void createAndShowGUI() {
         //Create and set up the window.
         JFrame frame = new JFrame("Hill Key Generator");
