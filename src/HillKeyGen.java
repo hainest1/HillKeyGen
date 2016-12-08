@@ -8,6 +8,9 @@ import javax.swing.*;
 import javax.swing.text.*;
 import java.util.*;
 import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import Jama.Matrix;
 
 public class HillKeyGen extends JPanel implements ActionListener {
@@ -75,7 +78,6 @@ public class HillKeyGen extends JPanel implements ActionListener {
         c.weightx = 1.0;
         c.weighty = 1.0;
         add(textField, c);
-
 	}
 
     public void actionPerformed(ActionEvent evt) {    	
@@ -121,6 +123,10 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		File outFile;
 		fileNumber = 0;
 		
+		//generate current date
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		
 		do 
 		{ 
 			//increases file number until the generated filename does not yet exist, to avoid overwrites
@@ -138,24 +144,22 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		{
 			for (int j = 0; j < v; j++)
 			{
-				pw.print( (int) matrix.get(i, j) + "\t");	//get matrix i,j element using Matrix.get()
-				
+				if (j < v - 1) pw.print( (int) matrix.get(i, j) + "\t");	//get matrix i,j element using Matrix.get()	
+				else pw.print( (int) matrix.get(i, j) + "");
 			}
 			pw.println("");
-			pw.println("");
-			
+			pw.println("");	
 		}			
 		
 		//some more file output
-		pw.println("");
 		pw.println("Determinant: " + detUnModded);
 		pw.println("Determinant Mod 26: " + det);
 		pw.println("Number of iterations: " + attempts);
 		pw.println("Determinant elapsed time: " + elapsedTime + "s");
+		pw.println("Generated " + dateFormat.format(date));
 		pw.close();	//close the printwriter
 		
 		textArea.append("Saved as: " + outFile.getAbsolutePath());	//output save location
-		
 	}
 
 	private void outputMatrix(int v, Matrix matrix) {
@@ -163,11 +167,11 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		{
 			for (int j = 0; j < v; j++)
 			{
-				textArea.append((int)matrix.get(i, j) + "\t");	//pulls matrix i,j value from Matrix object using Matrix.get()
+				if (j < v - 1) textArea.append((int)matrix.get(i, j) + "\t");	//pulls matrix i,j value from Matrix object using Matrix.get()
+				else textArea.append((int)matrix.get(i, j) + "");
 			}
 			textArea.append("\n\n");;
 		}
-		
 	}
 
 	private int getIntegerInput() {
@@ -184,7 +188,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 			
 					
 			matrix = new Matrix(n, n);	//initialize matrix JAMA object with dimension n
-			Random g = new Random();//random number generator object
+			Random g = new Random();	//random number generator object
 			
 			for (int i = 0; i < n; i++)//loop through array elements
 			{
@@ -192,12 +196,11 @@ public class HillKeyGen extends JPanel implements ActionListener {
 				{
 					double s = (double) g.nextInt(26) + 1;	//random value (0 - 25) + 1 for [i,j]
 					matrix.set(i, j, s);	//sets [i,j] to value of s
-
 				}
 			}
 			
 			detStart = System.currentTimeMillis();	//start time of the determinant calc in ms
-			detUnModded = (long) matrix.det();
+			detUnModded = getDeterminant(matrix);
 			det = detUnModded % 26;
 			detFinish = System.currentTimeMillis();	//end time in ms
 			elapsedTime = (double) (detFinish - detStart) / 1000.00; //elapsed time in s
@@ -208,6 +211,10 @@ public class HillKeyGen extends JPanel implements ActionListener {
 				&& det != 17 && det != 19 && det != 21 && det != 23 && det != 25);
 		
 		return matrix;
+	}
+
+	private long getDeterminant(Matrix matrix) {
+		return (long) matrix.det();
 	}
 
 	private static void createAndShowGUI() {
@@ -238,7 +245,5 @@ public class HillKeyGen extends JPanel implements ActionListener {
                 textField.requestFocus();
             }
         }); 
-        
-        //frame.setBounds(100, 100, 500, 300);
     }
 }
