@@ -1,6 +1,9 @@
 package Jama;
 
-   /** LU Decomposition.
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+/** LU Decomposition.
    <P>
    For an m-by-n matrix A with m >= n, the LU decomposition is an m-by-n
    unit lower triangular matrix L, an n-by-n upper triangular matrix U,
@@ -266,6 +269,33 @@ public class LUDecomposition implements java.io.Serializable {
       }
       return d;
    }
+   
+   /** Determinant
+   @return     det(A) Mod v
+   @exception  IllegalArgumentException  Matrix must be square
+   */
+
+   public BigDecimal detBig () {
+	      if (m != n) {
+	         throw new IllegalArgumentException("Matrix must be square.");
+	      }
+	      BigDecimal d = new BigDecimal(pivsign);
+	      for (int j = 0; j < n; j++) {
+	         d = d.multiply(new BigDecimal(LU[j][j]));
+	         //= (d * LU[j][j]) % v;
+	      }
+	      return d.setScale(0, RoundingMode.HALF_UP);
+	   }
+//   public double detMod (int v) {
+//      if (m != n) {
+//         throw new IllegalArgumentException("Matrix must be square.");
+//      }
+//      double d = (double) pivsign;
+//      for (int j = 0; j < n; j++) {
+//         d = (d * LU[j][j]) % v;
+//      }
+//      return d;
+//   }
 
    /** Solve A*X = B
    @param  B   A Matrix with as many rows as A and any number of columns.

@@ -1,6 +1,7 @@
 // Tom Haines, Ryan Stapp
 // MAT/CSC 483 Class Project
 // n x n Hill cipher matrix generator
+//Command line early prototype. Depreciated.
 
 import java.util.Random;
 import java.util.Scanner;

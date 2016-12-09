@@ -1,4 +1,6 @@
-package HillKeyGen;
+// Tom Haines, Ryan Stapp
+// MAT/CSC 483 Class Project - Fall 2016
+// n x n Hill cipher matrix generator
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -9,24 +11,22 @@ import java.awt.event.WindowEvent;
 import javax.swing.*;
 import java.util.*;
 import java.io.*;
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import Jama.LUDecomposition;
 import Jama.Matrix;
 
 public class HillKeyGen extends JPanel implements ActionListener {
 
 	protected static final long serialVersionUID = 1L;
 	protected static final String newline = System.lineSeparator();
-	protected int v, fileNumber;
-	protected long attempts, detStart, detFinish, elapsedTime, det2, detUnModded, det;
+	protected int v, fileNumber, det;
+	protected long attempts, detStart, detFinish, elapsedTime;
 	protected static JTextField textField;
 	protected JTextArea textArea;
 	
-	public boolean testing = true;
-
-	
+	public boolean testing = false;	// files wont output if set to true
 
 	/**
 	 * Launch the application.
@@ -78,15 +78,18 @@ public class HillKeyGen extends JPanel implements ActionListener {
     		v = getIntegerInput();
     		if (v > 0)
     		{
-	    		textArea.setText("Generating Matrix...");
+    			detStart = 0; detFinish = 0; elapsedTime = 0;
+    			
+    			textArea.setText("Generating Matrix...");
     			Matrix matrix = generateMatrix(v);	//matrix object stores random 1-26
 	    		
 	    		textArea.setText(v + " x " + v + " Hill matrix:\n\n");
 	    		outputMatrix(v, matrix);	//print to text area
 	    		
-	    		textArea.append("Determinant (old): " + detUnModded + newline);
-	    		textArea.append("Determinant Mod 26 (old): " + det2 + newline);
-	    		textArea.append("Determinant Mod 26: " + getDeterminantMod(matrix) + newline);
+				detFinish = System.currentTimeMillis();	//end time in ms
+				elapsedTime = detFinish - detStart; //elapsed time in ms
+	    		
+	    		textArea.append("Determinant Mod 26: " + det + " " + newline);
 	    		textArea.append("Number of iterations: " + attempts + newline);
 	    		textArea.append("Elapsed time: " + elapsedTime + " ms" + newline);
 	            
@@ -145,7 +148,6 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		}			
 		
 		//some more file output
-		pw.println("Determinant: " + detUnModded);
 		pw.println("Determinant Mod 26: " + det);
 		pw.println("Number of iterations: " + attempts);
 		pw.println("Elapsed time: " + elapsedTime + " ms");
@@ -184,7 +186,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		attempts = 0; 
 		
 		do {
-			detStart = 0; detUnModded = 0; det = 0; detFinish = 0; elapsedTime = 0;
+			detStart = 0; detFinish = 0; elapsedTime = 0;
 			
 			detStart = System.currentTimeMillis();	//start time of matrix gen in ms
 			
@@ -192,70 +194,21 @@ public class HillKeyGen extends JPanel implements ActionListener {
 			Random g = new Random();	//random number generator object
 			
 			for (int i = 0; i < n; i++)	//loop through matrix elements
-			{
 				for (int j = 0; j < n; j++)
 				{
 					double s = (double) g.nextInt(26) + 1;	//random value (0 - 25) + 1 for [i,j]
 					matrix.set(i, j, s);	//sets [i,j] to value of s
 				}
-			}
 			
-			detUnModded = getDeterminantOld(matrix);
-			det2 = detUnModded % 26;
-			det = getDeterminantMod(matrix);
-			detFinish = System.currentTimeMillis();	//end time in ms
-			elapsedTime = detFinish - detStart; //elapsed time in ms
+			det = matrix.detBig().remainder(new BigDecimal(26)).intValue();
 			attempts++;
 			
-		} //while (det != 1 && det != 3 && det != 5 && det != 7 && det != 9 && det != 11 && det != 15 
-				//&& det != 17 && det != 19 && det != 21 && det != 23 && det != 25);
-		while (det2 != 1 && det2 != 3 && det2 != 5 && det2 != 7 && det2 != 9 && det2 != 11 && det2 != 15 
-		&& det2 != 17 && det2 != 19 && det2 != 21 && det2 != 23 && det2 != 25);
+		} while (det != 1 && det != 3 && det != 5 && det != 7 && det != 9 && det != 11 && det != 15 
+				&& det != 17 && det != 19 && det != 21 && det != 23 && det != 25);
 		
 		return matrix;
 	}
-
-	/**
-	 * Takes a matrix and uses LUDecomposition to calculate the determinant.
-	 * @return long
-	 */
-	private long getDeterminantOld(Matrix matrix) { 
-		return (long) Math.round(matrix.det()); 
-	}
 	
-	/**
-	 * Takes a matrix and uses LUDecomposition to calculate the determinant mod m.
-	 * @return long
-	 */
-	private long getDeterminantMod(Matrix matrix) { 
-			Matrix A;
-			A = matrix;
-			int n = A.getRowDimension();
-			long det;
-			LUDecomposition LU = new LUDecomposition(A);
-			Matrix U;
-			U = LU.getU();
-			Matrix L;
-			L = LU.getL();
-			double detU = 1;
-			for (int i = 0; i < n; i++) {
-				detU *= (U.get(i,i) % 26);
-				detU = detU % 26;
-							
-			}
-			double detL = 1;
-			for (int i = 0; i < n; i++) {
-				detL *=  (L.get(i,i) % 26);
-				detL = detL % 26;
-			}
-			
-			det = Math.round(detU * detL);
-			
-			if (det < 0) det *= -1;
-			
-			return det;
-	}	
-
 	/**
 	 * Set up and show the window/GUI.
 	 */

@@ -8,6 +8,8 @@ import java.text.FieldPosition;
 import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.io.StreamTokenizer;
+import java.math.BigDecimal;
+
 import Jama.util.*;
 
 /**
@@ -840,6 +842,10 @@ public class Matrix implements Cloneable, java.io.Serializable {
    public double det () {
       return new LUDecomposition(this).det();
    }
+   
+   public BigDecimal detBig () {
+	      return new LUDecomposition(this).detBig();
+	   }
 
    /** Matrix rank
    @return     effective numerical rank, obtained from SVD.
