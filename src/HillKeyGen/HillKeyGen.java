@@ -1,3 +1,5 @@
+package HillKeyGen;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,24 +12,26 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import Jama.LUDecomposition;
 import Jama.Matrix;
 
 public class HillKeyGen extends JPanel implements ActionListener {
 
-	private static final long serialVersionUID = 1L;
-	private int v, fileNumber = 0;
-	private long attempts, detStart, detFinish, det, detUnModded;
-	private double elapsedTime = 0;
-	
+	protected static final long serialVersionUID = 1L;
+	protected static final String newline = System.lineSeparator();
+	protected int v, fileNumber;
+	protected long attempts, detStart, detFinish, elapsedTime, det2, detUnModded, det;
 	protected static JTextField textField;
 	protected JTextArea textArea;
-	private final static String newline = System.lineSeparator();
+	
+	public boolean testing = true;
+
 	
 
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try { createAndShowGUI(); } 
@@ -37,31 +41,28 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Create the application.
+	 * Create the application. Default constructor. Calls JPanel constructor with a GridBagLayout.
 	 */
 	public HillKeyGen() {
-		super(new GridBagLayout());
+		super(new GridBagLayout());	//JPanel constructor with LayoutManager GridBagLayout
         
 		JTextPane title = new JTextPane();
 		title.setText("Hill Key Generator V1\nBy Tom Haines and Ryan Stapp\nPlease enter a dimension below to generate a legal Hill matrix. Files are automatically saved.");
 		title.setEditable(false);
         
-		textField = new JTextField();
+		textField = new JTextField("2");
 		textField.addActionListener(this);
-		textField.setActionCommand("TFIELD");//probably use this for button too?
+		textField.setActionCommand("TFIELD"); //probably use this for button too?
+		textField.selectAll();
 
 		textArea = new JTextArea(20, 50);
 		textArea.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(textArea);
-		JButton submitButton = new JButton("Submit");
-		submitButton.addActionListener(this);
-		submitButton.setActionCommand("SUBMIT");
 
 		//Add Components to this panel.
 		GridBagConstraints c = new GridBagConstraints();
 
 		c.gridwidth = GridBagConstraints.REMAINDER;
-
 		c.fill = GridBagConstraints.HORIZONTAL;
 		add(title, c);
 		add(scrollPane, c);
@@ -70,7 +71,6 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		add(textField, c);
-		add(submitButton, c);
 	}
 
     public void actionPerformed(ActionEvent evt) {    	
@@ -78,22 +78,24 @@ public class HillKeyGen extends JPanel implements ActionListener {
     		v = getIntegerInput();
     		if (v > 0)
     		{
+	    		textArea.setText("Generating Matrix...");
+    			Matrix matrix = generateMatrix(v);	//matrix object stores random 1-26
+	    		
 	    		textArea.setText(v + " x " + v + " Hill matrix:\n\n");
-	            
-	    		Matrix matrix = generateMatrix(v);	//matrix object stores random 1-26
 	    		outputMatrix(v, matrix);	//print to text area
 	    		
-	    		textArea.append("Determinant: " + detUnModded + newline);
-	    		textArea.append("Determinant Mod 26: " + det + newline);
+	    		textArea.append("Determinant (old): " + detUnModded + newline);
+	    		textArea.append("Determinant Mod 26 (old): " + det2 + newline);
+	    		textArea.append("Determinant Mod 26: " + getDeterminantMod(matrix) + newline);
 	    		textArea.append("Number of iterations: " + attempts + newline);
-	    		textArea.append("Determinant elapsed time: " + elapsedTime + newline);
+	    		textArea.append("Elapsed time: " + elapsedTime + " ms" + newline);
 	            
-	    		try { outputToFile(matrix, v); } catch (IOException ioe) {
-	    			textArea.append("Trouble writing to file: " + ioe.getMessage());
+	    		try { if (!testing) outputToFile(matrix, v); } catch (IOException ioe) {
+	    			textArea.append("Error writing to file: " + ioe.getMessage());
 	    		}
     		}
     		else textArea.setText("Please enter a positive number.");
-    	} catch (Exception e) {	textArea.setText("Please enter an integer.");	}
+    	} catch (IllegalArgumentException e) {	textArea.setText("Please enter an integer.");	}
         
     	textField.selectAll();
         
@@ -103,10 +105,11 @@ public class HillKeyGen extends JPanel implements ActionListener {
     }
 	
 	/**
-	 * Output matrix of order v to file.
+	 * Output matrix of order v to an automatically generated filename
+	 * in the root directory of the app.
 	 */
     private void outputToFile(Matrix matrix, int v) throws IOException {
-    	String fileName;
+    	String fileName, fullFileName;
 		File outFile;
 		fileNumber = 0;
 		
@@ -117,14 +120,17 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		do 
 		{ 
 			//increases file number until the generated filename does not yet exist, to avoid overwrites
-			fileName = "HillKey" + v + "x" + v + "_" + ++fileNumber + ".txt";
-			outFile = new File(fileName); 
+			fileName = "HillKey" + v + "x" + v + "_" + ++fileNumber;
+			fullFileName = fileName + ".txt";
+			outFile = new File(fullFileName); 
 		} while (outFile.isFile());	
 
 		PrintWriter pw = new PrintWriter(outFile);	//create printwriter object for output
 		
 		//formatted file output
-		pw.println("Proper " + v + " x " + v + " Hill matrix:");
+		pw.println(v + " x " + v + " Hill matrix:");
+		pw.println("Generated by HillKeyGen V1");
+		pw.println("" + dateFormat.format(date));
 		pw.println("");
 		
 		for (int i = 0; i < v; i++)	//loops through all elements
@@ -142,8 +148,8 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		pw.println("Determinant: " + detUnModded);
 		pw.println("Determinant Mod 26: " + det);
 		pw.println("Number of iterations: " + attempts);
-		pw.println("Determinant elapsed time: " + elapsedTime + "s");
-		pw.print("Generated " + dateFormat.format(date));
+		pw.println("Elapsed time: " + elapsedTime + " ms");
+		pw.print("Key ID: " + fileName);
 		pw.close();	//close the printwriter
 		
 		textArea.append("Saved as: " + outFile.getAbsolutePath());	//output save location
@@ -171,6 +177,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	/**
 	 * Generate a matrix of order n that has a determinant%26
 	 * that is relatively prime to 26.
+	 * @return Matrix
 	 */
 	private Matrix generateMatrix(int n) {
 		Matrix matrix;	//new matrix JAMA object
@@ -179,7 +186,8 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		do {
 			detStart = 0; detUnModded = 0; det = 0; detFinish = 0; elapsedTime = 0;
 			
-					
+			detStart = System.currentTimeMillis();	//start time of matrix gen in ms
+			
 			matrix = new Matrix(n, n);	//initialize matrix JAMA object with dimension n
 			Random g = new Random();	//random number generator object
 			
@@ -192,20 +200,61 @@ public class HillKeyGen extends JPanel implements ActionListener {
 				}
 			}
 			
-			detStart = System.currentTimeMillis();	//start time of the determinant calc in ms
-			detUnModded = getDeterminant(matrix);
-			det = detUnModded % 26;
+			detUnModded = getDeterminantOld(matrix);
+			det2 = detUnModded % 26;
+			det = getDeterminantMod(matrix);
 			detFinish = System.currentTimeMillis();	//end time in ms
-			elapsedTime = (double) (detFinish - detStart) / 1000.00; //elapsed time in s
+			elapsedTime = detFinish - detStart; //elapsed time in ms
 			attempts++;
 			
-		} while (det != 1 && det != 3 && det != 5 && det != 7 && det != 9 && det != 11 && det != 15 
-				&& det != 17 && det != 19 && det != 21 && det != 23 && det != 25);
+		} //while (det != 1 && det != 3 && det != 5 && det != 7 && det != 9 && det != 11 && det != 15 
+				//&& det != 17 && det != 19 && det != 21 && det != 23 && det != 25);
+		while (det2 != 1 && det2 != 3 && det2 != 5 && det2 != 7 && det2 != 9 && det2 != 11 && det2 != 15 
+		&& det2 != 17 && det2 != 19 && det2 != 21 && det2 != 23 && det2 != 25);
 		
 		return matrix;
 	}
 
-	private long getDeterminant(Matrix matrix) { return (long) matrix.det(); }
+	/**
+	 * Takes a matrix and uses LUDecomposition to calculate the determinant.
+	 * @return long
+	 */
+	private long getDeterminantOld(Matrix matrix) { 
+		return (long) Math.round(matrix.det()); 
+	}
+	
+	/**
+	 * Takes a matrix and uses LUDecomposition to calculate the determinant mod m.
+	 * @return long
+	 */
+	private long getDeterminantMod(Matrix matrix) { 
+			Matrix A;
+			A = matrix;
+			int n = A.getRowDimension();
+			long det;
+			LUDecomposition LU = new LUDecomposition(A);
+			Matrix U;
+			U = LU.getU();
+			Matrix L;
+			L = LU.getL();
+			double detU = 1;
+			for (int i = 0; i < n; i++) {
+				detU *= (U.get(i,i) % 26);
+				detU = detU % 26;
+							
+			}
+			double detL = 1;
+			for (int i = 0; i < n; i++) {
+				detL *=  (L.get(i,i) % 26);
+				detL = detL % 26;
+			}
+			
+			det = Math.round(detU * detL);
+			
+			if (det < 0) det *= -1;
+			
+			return det;
+	}	
 
 	/**
 	 * Set up and show the window/GUI.
