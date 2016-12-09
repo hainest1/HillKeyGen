@@ -5,7 +5,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.*;
-import javax.swing.text.*;
 import java.util.*;
 import java.io.*;
 import java.text.DateFormat;
@@ -22,7 +21,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	
 	protected static JTextField textField;
 	protected JTextArea textArea;
-	private final static String newline = "\n";
+	private final static String newline = System.lineSeparator();
 	
 
 	/**
@@ -48,11 +47,15 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		title.setEditable(false);
         
 		textField = new JTextField();
-		textField.addActionListener(this);	//probably use this for button too?
+		textField.addActionListener(this);
+		textField.setActionCommand("TFIELD");//probably use this for button too?
 
 		textArea = new JTextArea(20, 50);
 		textArea.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(textArea);
+		JButton submitButton = new JButton("Submit");
+		submitButton.addActionListener(this);
+		submitButton.setActionCommand("SUBMIT");
 
 		//Add Components to this panel.
 		GridBagConstraints c = new GridBagConstraints();
@@ -67,6 +70,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		add(textField, c);
+		add(submitButton, c);
 	}
 
     public void actionPerformed(ActionEvent evt) {    	
@@ -76,8 +80,8 @@ public class HillKeyGen extends JPanel implements ActionListener {
     		{
 	    		textArea.setText(v + " x " + v + " Hill matrix:\n\n");
 	            
-	    		Matrix matrix = generateMatrix(v);
-	    		outputMatrix(v, matrix);
+	    		Matrix matrix = generateMatrix(v);	//matrix object stores random 1-26
+	    		outputMatrix(v, matrix);	//print to text area
 	    		
 	    		textArea.append("Determinant: " + detUnModded + newline);
 	    		textArea.append("Determinant Mod 26: " + det + newline);
@@ -172,8 +176,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		Matrix matrix;	//new matrix JAMA object
 		attempts = 0; 
 		
-		do
-		{
+		do {
 			detStart = 0; detUnModded = 0; det = 0; detFinish = 0; elapsedTime = 0;
 			
 					
@@ -194,7 +197,6 @@ public class HillKeyGen extends JPanel implements ActionListener {
 			det = detUnModded % 26;
 			detFinish = System.currentTimeMillis();	//end time in ms
 			elapsedTime = (double) (detFinish - detStart) / 1000.00; //elapsed time in s
-			
 			attempts++;
 			
 		} while (det != 1 && det != 3 && det != 5 && det != 7 && det != 9 && det != 11 && det != 15 
@@ -203,7 +205,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		return matrix;
 	}
 
-	private long getDeterminant(Matrix matrix) {	return (long) matrix.det();	}
+	private long getDeterminant(Matrix matrix) { return (long) matrix.det(); }
 
 	/**
 	 * Set up and show the window/GUI.
