@@ -19,14 +19,14 @@ import Jama.Matrix;
 
 public class HillKeyGen extends JPanel implements ActionListener {
 
-	protected static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -993630192967534413L;
 	protected static final String newline = System.lineSeparator();
 	protected int v, fileNumber, det;
 	protected long attempts, detStart, detFinish, elapsedTime;
 	protected static JTextField textField;
 	protected JTextArea textArea;
 	
-	public boolean testing = false;	// files wont output if set to true
+	public boolean testing = true;	// files wont output if set to true
 
 	/**
 	 * Launch the application.
@@ -52,7 +52,6 @@ public class HillKeyGen extends JPanel implements ActionListener {
         
 		textField = new JTextField("2");
 		textField.addActionListener(this);
-		textField.setActionCommand("TFIELD"); //probably use this for button too?
 		textField.selectAll();
 
 		textArea = new JTextArea(20, 50);
@@ -64,6 +63,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(5,5,5,5);
 		add(title, c);
 		add(scrollPane, c);
  
@@ -111,7 +111,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	 * Output matrix of order v to an automatically generated filename
 	 * in the root directory of the app.
 	 */
-    private void outputToFile(Matrix matrix, int v) throws IOException {
+    protected void outputToFile(Matrix matrix, int v) throws IOException {
     	String fileName, fullFileName;
 		File outFile;
 		fileNumber = 0;
@@ -160,11 +160,9 @@ public class HillKeyGen extends JPanel implements ActionListener {
     /**
 	 * Output matrix to textArea.
 	 */
-	private void outputMatrix(int v, Matrix matrix) {
-		for (int i = 0; i < v; i++)
-		{
-			for (int j = 0; j < v; j++)
-			{
+    protected void outputMatrix(int v, Matrix matrix) {
+		for (int i = 0; i < v; i++) {
+			for (int j = 0; j < v; j++) {
 				if (j < v - 1) textArea.append((int)matrix.get(i, j) + "\t");	//pulls matrix i,j value from Matrix object using Matrix.get()
 				else textArea.append((int)matrix.get(i, j) + "");
 			}
@@ -172,7 +170,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 		}
 	}
 
-	private int getIntegerInput() {
+	protected int getIntegerInput() {
 		return Integer.valueOf(textField.getText());	
 	}
 
@@ -181,16 +179,14 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	 * that is relatively prime to 26.
 	 * @return Matrix
 	 */
-	private Matrix generateMatrix(int n) {
+	protected Matrix generateMatrix(int n) {
 		Matrix matrix;	//new matrix JAMA object
 		attempts = 0; 
 		
 		do {
-			detStart = 0; detFinish = 0; elapsedTime = 0;
-			
 			detStart = System.currentTimeMillis();	//start time of matrix gen in ms
 			
-			matrix = new Matrix(n, n);	//initialize matrix JAMA object with dimension n
+			matrix = new Matrix(n, n);	//initialize matrix JAMA object with dimensions n
 			Random g = new Random();	//random number generator object
 			
 			for (int i = 0; i < n; i++)	//loop through matrix elements
@@ -204,7 +200,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 			attempts++;
 			
 		} while (det != 1 && det != 3 && det != 5 && det != 7 && det != 9 && det != 11 && det != 15 
-				&& det != 17 && det != 19 && det != 21 && det != 23 && det != 25);
+				&& det != 17 && det != 19 && det != 21 && det != 23 && det != 25);	//determinant is not relatively prime to 26
 		
 		return matrix;
 	}
@@ -212,7 +208,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	/**
 	 * Set up and show the window/GUI.
 	 */
-	private static void createAndShowGUI() {
+	protected static void createAndShowGUI() {
         //Create and set up the window.
         JFrame frame = new JFrame("Hill Key Generator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
