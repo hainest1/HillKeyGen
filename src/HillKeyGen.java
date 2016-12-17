@@ -26,7 +26,7 @@ public class HillKeyGen extends JPanel implements ActionListener {
 	protected static JTextField textField;
 	protected JTextArea textArea;
 	
-	public boolean testing = true;	// files wont output if set to true
+	public boolean testing = false;	// files wont output if set to true
 
 	/**
 	 * Launch the application.
